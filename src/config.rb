@@ -3,12 +3,17 @@ require 'yaml'
 DEV_CONFIG = 'config/dev.yml'.freeze
 SECRETS = 'config/secrets.yml'.freeze
 
-# Use http://yaml.org/YAML_for_ruby.html
-
 class Config
-  def initialize(file = DEV_CONFIG)
-    @config = merge(file, SECRETS)
-    puts @config.inspect
+  def initialize(file)
+    @config_file = File.file?(file.to_s) ? file : DEV_CONFIG
+  end
+
+  def get(*keys)
+    load.dig(*keys)
+  end
+
+  def load
+    merge(@config_file, SECRETS)
   end
 
   def merge(*files)
@@ -24,16 +29,5 @@ class Config
     end
   end
 
-  private :merge, :sym_keys
+  private :load, :merge, :sym_keys
 end
-
-class Bot
-  @@config = nil
-  def self.run(*args)
-    file = args.length > 2 ? args[2] : DEV_CONFIG
-    @@config = Config.new(file)
-    Bot.new
-  end
-end
-
-Bot.run(ARGV)

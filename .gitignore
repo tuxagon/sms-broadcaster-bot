@@ -1,3 +1,2 @@
-db/*
-!db/schema.rb
+db/
 secrets.yml
