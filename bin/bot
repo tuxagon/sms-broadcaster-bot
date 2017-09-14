@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+
+require 'mail'
+require 'telegram/bot'
+
+require_relative '../lib/message_responder'
+require_relative '../lib/app_configurator'
+
+config = AppConfigurator.new
+config.configure
+
+token = config.get_token
+logger = config.get_logger
+smtp = config.get_smtp
+from_email = config.get_from_email
+
+Mail.defaults do
+  delivery_method :smtp, {
+    address: smtp['host'],
+    port: smtp['port'],
+    user_name: smtp['username'],
+    password: smtp['password'],
+    authentication: smtp['authentication']
+  }
+end
+
+logger.debug 'Starting telegram bot'
+
+Telegram::Bot::Client.run(token) do |bot|
+  bot.listen do |message|
+    options = {
+      bot: bot, 
+      message: message, 
+      from_email: from_email
+    }
+
+    logger.debug "@#{message.from.username}: #{message.text}"
+    MessageResponder.new(options).respond
+  end
+end

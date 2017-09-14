@@ -1,0 +1,4 @@
+smtp:
+  host: smtp.gmail.com
+  port: 587
+  authentication: plain

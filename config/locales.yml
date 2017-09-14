@@ -1,0 +1,4 @@
+en:
+  message_subject: "telegram"
+  no_contacts_message: "No contacts configured"
+  wont_send_blank_message: "A message body is required to broadcast"

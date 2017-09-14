@@ -1,0 +1,2 @@
+adapter: sqlite
+database: db/bot.db
