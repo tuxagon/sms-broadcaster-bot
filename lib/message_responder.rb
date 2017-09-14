@@ -1,18 +1,16 @@
 require 'i18n'
 
-require_relative 'database_connector.rb'
-require_relative 'message_sender.rb'
-require_relative 'sms_sender.rb'
+require_relative 'database_connector'
+require_relative 'message_sender'
+require_relative 'sms_sender'
 
 class MessageResponder
-  attr_reader :from_email
   attr_reader :message
   attr_reader :bot
   attr_reader :db
 
   def initialize(options)
     @bot = options[:bot]
-    @from_email = options[:from_email]
     @message = options[:message]
     @db = DatabaseConnector.new
   end
@@ -59,8 +57,7 @@ class MessageResponder
 
     options = {
       contacts: contacts, 
-      message: message,
-      from_email: from_email
+      message: message
     }
     sent_message = SmsSender.new(options).send(text)
     bot.api.send_message(chat_id: message.chat.id, text: sent_message)

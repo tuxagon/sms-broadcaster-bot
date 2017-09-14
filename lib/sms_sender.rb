@@ -1,6 +1,8 @@
 require 'i18n'
 require 'mail'
 
+require_relative 'app_configurator'
+
 CARRIERS = {
   alltel: 'message.alltel.com',
   alltelmms: 'mms.alltelwireless.com',
@@ -32,8 +34,8 @@ class SmsSender
   
   def initialize(options)
     @contacts = options[:contacts]
-    @from_email = options[:from_email]
     @message = options[:message]
+    @from_email = AppConfigurator.new.get_from_email
   end
 
   def send(body)
