@@ -17,7 +17,6 @@ class MessageResponder
 
   def respond
     on(/^\/broadcast(.*)/) do |text|
-      puts message.chat.id
       send_sms(text.strip) unless text.nil?
     end
   end
@@ -41,17 +40,13 @@ class MessageResponder
 
   def send_sms(text)
     if text.empty?
-      bot.api.send_message(
-        chat_id: message.chat.id, 
-        text: I18n.t('wont_send_blank_message'))
+      answer_with_message(I18n.t('wont_send_blank_message'))
       return
     end
 
     contacts = @db.contacts_by_chat(message.chat.id)
     if contacts.length.zero?
-      bot.api.send_message(
-        chat_id: message.chat.id, 
-        text: I18n.t('no_contacts_message'))
+      answer_with_message(I18n.t('no_contacts_message'))
       return
     end
 
@@ -59,7 +54,13 @@ class MessageResponder
       contacts: contacts, 
       message: message
     }
-    sent_message = SmsSender.new(options).send(text)
-    bot.api.send_message(chat_id: message.chat.id, text: sent_message)
+
+    answer_with_message(SmsSender.new(options).send(text))
+  end
+
+  private 
+
+  def answer_with_message(text)
+    MessageSender.new(bot: bot, chat: message.chat, text: text).send
   end
 end

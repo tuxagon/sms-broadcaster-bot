@@ -29,10 +29,12 @@ class SmsSender
   attr_reader :contacts
   attr_reader :from_email
   attr_reader :message
+  attr_reader :logger
   
   def initialize(options)
     @contacts = options[:contacts]
     @message = options[:message]
+    @logger = AppConfigurator.new.get_logger
     @from_email = AppConfigurator.new.get_from_email
   end
 
@@ -41,7 +43,7 @@ class SmsSender
     contacts.each do |contact|
       to_email = construct_email(contact)
       send_to(to_email, body)
-      sent_message += "SMS sent to #{contact[:name]} #{to_email}\n"
+      sent_message += "MMS sent to #{contact[:name]}\n"
     end
     sent_message
   end
@@ -55,6 +57,9 @@ class SmsSender
       body    body
     end
     mail[:from] = from_email
+
+    logger.debug "Sending message to #{to_email}"
+
     mail.deliver
   end
 

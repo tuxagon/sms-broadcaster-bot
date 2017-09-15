@@ -32,7 +32,7 @@ Telegram::Bot::Client.run(token) do |bot|
       message: message
     }
 
-    logger.debug "@#{message.from.username}: #{message.text}"
+    logger.debug "@#{message.from.username} in #{message.chat.id}: #{message.text}"
     MessageResponder.new(options).respond
   end
 end
