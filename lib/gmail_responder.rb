@@ -6,6 +6,7 @@ require 'fileutils'
 
 require_relative 'app_configurator'
 require_relative 'database_connector'
+require_relative 'message_sender'
 
 OOB_URI = 'urn:ietf:wg:oauth:2.0:oob'.freeze
 APPLICATION_NAME = 'SMS Broadcaster Bot'.freeze
@@ -18,30 +19,63 @@ class GmailResponder
   attr_reader :logger
   attr_reader :service
   attr_reader :user_id
+  attr_reader :db
+  attr_reader :bot
 
-  def initialize
+  def initialize(options)
     @logger = AppConfigurator.new.get_logger
     @service = get_service
     @user_id = 'me'
+    @bot = options[:bot]
+    @db = DatabaseConnector.new
   end
 
   def forward
-    DatabaseConnector.new.contacts.each do |contact|
+    contacts = db.contacts.map { |c| c }
+    contacts.each do |contact|
       logger.debug "Searching messages for #{contact[:name]} - #{contact[:phone]}"
+      
+      # get all messages, which really equates to only showing ids
       result = service.list_user_messages(user_id, q: "from:#{contact[:phone]}")
-      logger.debug "No messages found" if result.messages.empty?
+      return if result.messages.nil?
+
+      # get the details of each message and then forward it to telegram
       result.messages.each do |message|
-        message = get_message_from_id(message.id)
-        logger.debug " - #{message.inspect}"
+        message_details = get_message_from_id(message.id)
+
+        # continue if the message is less than a day old
+        next if message_details.nil? || too_old?(message_details.internal_date)
+        # continue if the message has not already been forwarded
+        sent_messages = db.messages_by_contact(contact[:id]).map { |m| m[:message_id] }
+        next if sent_messages.include?(message.id)
+
+        send_message(contact, message_details)
       end
     end
   end
 
   private
 
+  def send_message(contact, message)
+    # send message to telegram
+    unless message.snippet.empty?
+      text = "FROM: #{contact[:name]}\nMESSAGE: #{message.snippet}"
+      chat = Struct.new(:id).new(contact[:chat_id])
+      MessageSender.new(bot: bot, chat: chat, text: text).send
+    end
+    
+    # mark message as sent
+    db.insert_message(contact[:id], message.id)
+  end
+
   def get_message_from_id(id)
-    result = service.get_user_message(user_id, id, format: 'metadata', metadata_headers: 'From')
-    result 
+    begin
+      result = service.get_user_message(user_id, id, format: 'minimal')
+      result 
+    rescue
+      puts "uh oh"
+      nil
+    end
   end
 
   def authorize
@@ -69,5 +103,9 @@ class GmailResponder
     service.client_options.application_name = APPLICATION_NAME
     service.authorization = authorize
     service
+  end
+
+  def too_old?(timestamp)
+    timestamp <= (Time.new.getutc.to_i - 24*60*60)
   end
 end

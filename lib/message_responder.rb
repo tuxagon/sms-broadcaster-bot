@@ -55,6 +55,7 @@ class MessageResponder
       message: message
     }
 
+    text = "FROM #{message.chat.title}: #{text}"
     answer_with_message(SmsSender.new(options).send(text))
   end
 

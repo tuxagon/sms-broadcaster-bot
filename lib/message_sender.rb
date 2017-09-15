@@ -22,7 +22,7 @@ class MessageSender
       bot.api.send_message(chat_id: chat.id, text: text)
     end
 
-    logger.debug "Sending '#{text}' to #{chat.username}"
+    logger.debug "Sending '#{text}' to #{chat.id}"
   end
 
   private

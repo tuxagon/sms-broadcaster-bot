@@ -24,21 +24,21 @@ Mail.defaults do
   }
 end
 
-logger.debug "Starting Gmail watch"
-
-pid = Process.fork do
-  running = true
-  Signal.trap('INT') { running = false }
-  GmailResponder.new.forward #while running
-  Process.exit
-end
-
-logger.debug "Gmail watch PID: #{pid}"
+logger.debug 'Starting telegram bot'
 
 begin
-  logger.debug 'Starting telegram bot'
-
   Telegram::Bot::Client.run(token) do |bot|
+    logger.debug "Starting Gmail watch"
+    
+    pid = Process.fork do
+      running = true
+      Signal.trap('INT') { running = false }
+      GmailResponder.new({bot: bot}).forward while running
+      Process.exit
+    end
+    
+    logger.debug "Gmail watch PID: #{pid}"
+
     bot.listen do |message|
       options = {
         bot: bot, 
@@ -50,6 +50,6 @@ begin
     end
   end
 ensure
-  Process.wait(pid)
+  Process.wait
 end
 

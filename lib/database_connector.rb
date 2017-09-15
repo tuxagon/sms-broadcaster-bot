@@ -15,6 +15,14 @@ class DatabaseConnector
     contacts.where(chat_id: chat_id).map { |c| c }
   end
 
+  def messages_by_contact(contact_id)
+    connect[:messages].where(contact_id: contact_id).map { |m| m }
+  end
+
+  def insert_message(contact_id, message_id)
+    connect[:messages].insert(contact_id: contact_id, message_id: message_id)
+  end
+
   private 
 
   def loggers
