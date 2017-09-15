@@ -7,8 +7,12 @@ class DatabaseConnector
     Sequel.connect(connection_details, loggers: loggers)
   end
 
+  def contacts
+    connect[:contacts]
+  end
+
   def contacts_by_chat(chat_id)
-    connect[:contacts].where(chat_id: chat_id).map { |c| c }
+    contacts.where(chat_id: chat_id).map { |c| c }
   end
 
   private 

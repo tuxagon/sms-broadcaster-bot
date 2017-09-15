@@ -4,4 +4,5 @@ source 'https://rubygems.org' do
   gem 'mail', '2.6.6'
   gem 'i18n', '0.8.6'
   gem 'rake', '12.0.0'
+  gem 'google-api-client', '0.13.6'
 end

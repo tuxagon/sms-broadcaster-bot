@@ -1,3 +1,4 @@
 *.db
 *.log
 secrets.yml
+client_secret.json

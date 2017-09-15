@@ -3,8 +3,9 @@
 require 'mail'
 require 'telegram/bot'
 
-require_relative '../lib/message_responder'
 require_relative '../lib/app_configurator'
+require_relative '../lib/gmail_responder'
+require_relative '../lib/message_responder'
 
 config = AppConfigurator.new
 config.configure
@@ -23,16 +24,32 @@ Mail.defaults do
   }
 end
 
-logger.debug 'Starting telegram bot'
+logger.debug "Starting Gmail watch"
 
-Telegram::Bot::Client.run(token) do |bot|
-  bot.listen do |message|
-    options = {
-      bot: bot, 
-      message: message
-    }
-
-    logger.debug "@#{message.from.username} in #{message.chat.id}: #{message.text}"
-    MessageResponder.new(options).respond
-  end
+pid = Process.fork do
+  running = true
+  Signal.trap('INT') { running = false }
+  GmailResponder.new.forward #while running
+  Process.exit
 end
+
+logger.debug "Gmail watch PID: #{pid}"
+
+begin
+  logger.debug 'Starting telegram bot'
+
+  Telegram::Bot::Client.run(token) do |bot|
+    bot.listen do |message|
+      options = {
+        bot: bot, 
+        message: message
+      }
+
+      logger.debug "@#{message.from.username} in #{message.chat.id}: #{message.text}"
+      MessageResponder.new(options).respond
+    end
+  end
+ensure
+  Process.wait(pid)
+end
+
