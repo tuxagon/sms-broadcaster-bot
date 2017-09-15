@@ -4,28 +4,26 @@ require 'mail'
 require_relative 'app_configurator'
 
 CARRIERS = {
-  alltel: 'message.alltel.com',
-  alltelmms: 'mms.alltelwireless.com',
-  att: 'txt.att.net',
-  attmms: 'mms.att.net',
+  #alltel: 'message.alltel.com',
+  alltel: 'mms.alltelwireless.com',
+  #att: 'txt.att.net',
+  att: 'mms.att.net',
+  #boost: 'myboostmobile.com',
   boost: 'myboostmobile.com',
-  boostmms: 'myboostmobile.com',
   cricket: 'mms.cricketwireless.net',
   projectfi: 'msg.fi.google.com',
-  sprint: 'messaging.sprintpcs.com',
-  sprintmms: 'pm.sprint.com',
+  #sprint: 'messaging.sprintpcs.com',
+  sprint: 'pm.sprint.com',
+  #tmobile: 'tmomail.net',
   tmobile: 'tmomail.net',
-  tmobilemms: 'tmomail.net',
-  uscellular: 'email.uscc.net',
-  uscellularmms: 'mms.uscc.net',
-  verizon: 'vtext.com',
-  verizonmms: 'vzwpix.com',
-  virgin: 'vmobl.com',
-  virginmms: 'vmpix.com',
+  #uscellular: 'email.uscc.net',
+  uscellular: 'mms.uscc.net',
+  #verizon: 'vtext.com',
+  verizon: 'vzwpix.com',
+  #virgin: 'vmobl.com',
+  virgin: 'vmpix.com',
   republicwireless: 'text.republicwireless.com'
 }.freeze
-
-SMS_BYTE_LIMIT = 140.freeze
 
 class SmsSender
   attr_reader :contacts
@@ -41,7 +39,7 @@ class SmsSender
   def send(body)
     sent_message = ''
     contacts.each do |contact|
-      to_email = construct_email(contact, is_mms(body))
+      to_email = construct_email(contact)
       send_to(to_email, body)
       sent_message += "SMS sent to #{contact[:name]} #{to_email}\n"
     end
@@ -60,16 +58,7 @@ class SmsSender
     mail.deliver
   end
 
-  def construct_email(contact, is_mms)
-    carrier = contact[:carrier]
-    mms_carrier = carrier.to_s + "mms"
-    if is_mms && CARRIERS[mms_carrier]
-      carrier = mms_carrier
-    end
-    "#{contact[:phone]}@#{CARRIERS[carrier.to_sym]}"
-  end
-
-  def is_mms(body)
-    body.bytes.length > SMS_BYTE_LIMIT
+  def construct_email(contact)
+    "#{contact[:phone]}@#{CARRIERS[contact[:carrier].to_sym]}"
   end
 end
